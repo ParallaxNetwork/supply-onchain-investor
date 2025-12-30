@@ -58,7 +58,7 @@
   --sidebar-border: oklch(0.915 0.006 145);
   --sidebar-ring: oklch(0.720 0.190 145);
 
-  --radius: 1.25rem;
+  --radius: 0.75rem;
 
   /* Shadows (very subtle, card-focused) */
   --shadow-color: rgba(46, 204, 113, 0.18);
