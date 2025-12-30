@@ -14,9 +14,10 @@ model SignatureRequest {
   updatedAt DateTime  @updatedAt
   expiresAt DateTime?
 
-  createdBy  User        @relation("SignatureRequestCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  vault      Vault?      @relation(fields: [vaultId], references: [id], onDelete: SetNull)
-  signatures Signature[]
+  createdBy   User         @relation("SignatureRequestCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  vault       Vault?       @relation(fields: [vaultId], references: [id], onDelete: SetNull)
+  fundRelease FundRelease?
+  signatures  Signature[]
 
   @@index([status])
   @@index([type])
@@ -40,4 +41,16 @@ model Signature {
   @@unique([requestId, signerUserId])
   @@index([signerUserId])
   @@index([requestId])
+}
+
+model FundRelease {
+  id                 String @id @default(cuid())
+  signatureRequestId String @unique
+
+  vendorAddress String
+  amount        BigInt
+  description   String?
+  goodsTokenId  BigInt?
+
+  signatureRequest SignatureRequest @relation(fields: [signatureRequestId], references: [id])
 }

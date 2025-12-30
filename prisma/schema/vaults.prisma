@@ -5,17 +5,29 @@ model Vault {
   description String? @db.Text
 
   traderUserId String
-  status       VaultStatus @default(DRAFT)
+  status       VaultStatus @default(OPEN)
+
+  investorSignerUserId String?
+  adminUserId          String
+
+  totalInvested BigInt @default(0)
+  totalSpent    BigInt @default(0)
+
+  contractAddress String? @unique
 
   collateralValue BigInt
   fundTargetBps   Int    @default(7000)
   profitShareBps  Int
   traderCcrBps    Int?
 
+  expiresAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   trader            User               @relation(fields: [traderUserId], references: [id], onDelete: Restrict)
+  investorSigner    User?              @relation("VaultInvestorSigner", fields: [investorSignerUserId], references: [id], onDelete: SetNull)
+  admin             User               @relation("VaultAdmin", fields: [adminUserId], references: [id], onDelete: Restrict)
   collateral        VaultCollateral[]
   investments       VaultInvestment[]
   documents         VaultDocument[]

@@ -50,10 +50,10 @@ enum MarketplaceInvestmentStatus {
 }
 
 enum VaultStatus {
-  DRAFT
-  ACTIVE
+  OPEN
   FUNDED
-  CLOSED
+  ACTIVE
+  EXPIRED
   CANCELED
 }
 

@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, VaultStatus, CommodityType } from "../generated/prisma/client";
+import { PrismaClient, UserRole, VaultStatus, CommodityType, SignatureRequestType } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
@@ -70,6 +70,7 @@ async function main() {
       coffeeGrade: "Grade 1",
       coffeeOrigin: "Aceh Gayo",
       weightGrams: 1000000n, // 1000 kg
+      tokenId: 1n, // Token ID #1
       ownerUserId: trader.id,
       warehouseId: warehouse.id,
     },
@@ -82,11 +83,16 @@ async function main() {
       name: "Aceh Gayo Premium Harvest 2024",
       description: "High-altitude Arabica coffee from the Gayo highlands. Fully washed and sun-dried.",
       traderUserId: trader.id,
+      adminUserId: admin.id,
+      investorSignerUserId: investor.id,
       status: VaultStatus.ACTIVE,
       collateralValue: 150000000n, // 150M IDR
       fundTargetBps: 8000, // 80%
       profitShareBps: 2000, // 20%
       traderCcrBps: 1000, // 10%
+      totalInvested: 10000000n, // 10M IDR
+      totalSpent: 0n,
+      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
       collateral: {
         create: {
           commodityLotId: commodityLot.id,
@@ -107,6 +113,24 @@ async function main() {
     },
   });
   console.log("Created Investment for:", investor.name);
+
+  // 6. Create Fund Release Request
+  const signatureRequest = await db.signatureRequest.create({
+    data: {
+      type: SignatureRequestType.FUND_RELEASE,
+      createdByUserId: trader.id,
+      vaultId: vault.id,
+      requiredSignatures: 2,
+      fundRelease: {
+        create: {
+          vendorAddress: "0xVendorAddress123",
+          amount: 50000000n, // 50M IDR
+          description: "Payment for fertilizer shipment",
+        },
+      },
+    },
+  });
+  console.log("Created Fund Release Request:", signatureRequest.id);
 
   console.log("✅ Seed completed!");
 }

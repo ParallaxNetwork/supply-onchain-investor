@@ -122,7 +122,7 @@ export function LoginForm() {
               onSubmit={(e) => {
                 e.preventDefault();
                 // Handle OTP verification
-                console.log("OTP verified");
+                // console.log("OTP verified");
               }}
             >
               <div className="space-y-2">

@@ -19,9 +19,11 @@ model User {
   kycReviews      KycApplication[] @relation("KycReviewedBy")
   wallet          Wallet?
 
-  ownedCommodityLots CommodityLot[]       @relation("OwnerCommodityLots")
-  ownedListings      MarketplaceListing[]
-  traderVaults       Vault[]
+  ownedCommodityLots   CommodityLot[]       @relation("OwnerCommodityLots")
+  ownedListings        MarketplaceListing[]
+  traderVaults         Vault[]
+  investorSignerVaults Vault[]              @relation("VaultInvestorSigner")
+  adminVaults          Vault[]              @relation("VaultAdmin")
 
   marketplaceInvestments MarketplaceInvestment[]
   vaultInvestments       VaultInvestment[]

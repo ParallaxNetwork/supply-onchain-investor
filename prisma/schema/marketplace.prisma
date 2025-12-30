@@ -23,6 +23,7 @@ model CommodityLot {
   coffeeGrade  String?
   coffeeOrigin String?
   weightGrams  BigInt
+  tokenId      BigInt? @unique
 
   ownerUserId String
   warehouseId String

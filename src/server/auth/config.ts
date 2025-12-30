@@ -40,11 +40,12 @@ export const authConfig = {
         role: { label: "Role", type: "text" },
       },
       async authorize(credentials) {
-        console.log("[Mock Login] Authorizing with credentials:", credentials);
         if (process.env.NODE_ENV === "production") {
-          console.log("[Mock Login] Blocked in production");
+          // console.log("[Mock Login] Blocked in production");
           return null;
         }
+
+        console.log("[Mock Login] Authorizing with credentials:", credentials);
 
         const role = (credentials?.role as string) || "INVESTOR";
         const email = `mock-${role.toLowerCase()}@example.com`;
