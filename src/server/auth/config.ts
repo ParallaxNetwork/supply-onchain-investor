@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { db } from "@/server/db";
@@ -33,23 +34,58 @@ declare module "next-auth" {
 export const authConfig = {
   providers: [
     DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
+    CredentialsProvider({
+      name: "Mock Login",
+      credentials: {
+        role: { label: "Role", type: "text" },
+      },
+      async authorize(credentials) {
+        console.log("[Mock Login] Authorizing with credentials:", credentials);
+        if (process.env.NODE_ENV === "production") {
+          console.log("[Mock Login] Blocked in production");
+          return null;
+        }
+
+        const role = (credentials?.role as string) || "INVESTOR";
+        const email = `mock-${role.toLowerCase()}@example.com`;
+
+        try {
+          // Upsert the mock user in the database
+          const user = await db.user.upsert({
+            where: { email },
+            update: {},
+            create: {
+              email,
+              name: `Mock ${role}`,
+              role: role === "ADMIN" ? "ADMIN" : "INVESTOR",
+              image: `https://ui-avatars.com/api/?name=Mock+${role}&background=random`,
+            },
+          });
+          console.log("[Mock Login] User upserted:", user);
+          return user;
+        } catch (error) {
+          console.error("[Mock Login] Database error:", error);
+          return null;
+        }
+      },
+    }),
   ],
   adapter: PrismaAdapter(db),
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    session: ({ session, user }) => ({
+    jwt: ({ token, user }) => {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+    session: ({ session, token }) => ({
       ...session,
       user: {
         ...session.user,
-        id: user.id,
+        id: token.sub!,
       },
     }),
   },
