@@ -1,163 +1,17 @@
-"use client";
-
 import React from "react";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getInvestmentDetail } from "@/data/investments";
+import { InvestmentSidebar } from "@/components/investor/investment-sidebar";
 
-export default function InvestmentDetailPage() {
-  // Mock data - in a real app this would be fetched based on params.id
-  const investmentData = {
-    title: "Gayo Coffee Harvest 2024",
-    description:
-      "Invest in high-grade Arabica coffee sourced directly from the Gayo highlands. Backed by physical inventory managed under the SRG scheme, offering stable yield through commodity trade financing.",
-    tags: [
-      { icon: "verified", text: "Verified by Gudangin" },
-      { icon: "security", text: "Insured 100%" },
-      { icon: "lock_clock", text: "6 Month Lock" },
-    ],
-    stats: {
-      profitShare: "70 : 30",
-      profitShareLabel: "Investor : Trader",
-      target: "500M",
-      targetUnit: "IDRP",
-      validity: "30 Oct 25",
-      validitySub: "365 Days Left",
-      lockPeriod: "6 Mo",
-      lockPeriodSub: "From Close",
-    },
-    activeInvestment: {
-      amount: "120,000,000",
-      unit: "IDRP",
-      lockPeriodRemaining: "3 Months Left",
-      progress: 50,
-      started: "15 Oct 2024",
-      unlockDate: "15 Apr 2025",
-    },
-    funding: {
-      totalRaised: "350M",
-      target: "500M IDRP",
-      percentage: 70,
-      ltvRatio: "70%",
-      balance: "45,000,000 IDRP",
-    },
-    collateral: {
-      commodity: "Arabica Gayo",
-      grade: "Grade 1 (Specialty)",
-      quantity: "20,000 kg",
-      valuation: "850,000,000",
-      certificate: "SRG #10293",
-    },
-    tradeableAssets: [
-      {
-        name: "Arabica Gayo Lot A",
-        grade: "Grade 1",
-        quantity: "5,000 kg",
-        valuation: "212,500,000",
-        status: "In Vault",
-        statusColor: "blue",
-        details: {
-          certificate: "SRG #10293-A",
-          inboundDate: "15 Sep 2024",
-          expiryDate: "15 Sep 2025",
-          location: "Aceh Tengah WMS",
-        },
-      },
-      {
-        name: "Arabica Gayo Lot B",
-        grade: "Grade 1",
-        quantity: "8,000 kg",
-        valuation: "340,000,000",
-        status: "Pending",
-        statusColor: "yellow",
-        details: {
-          certificate: "Processing...",
-          inboundDate: "20 Oct 2024",
-          expiryDate: "20 Oct 2025",
-          location: "Transit to Gudangin",
-        },
-      },
-      {
-        name: "Robusta Lampung Lot X",
-        grade: "Grade 2",
-        quantity: "7,000 kg",
-        valuation: "210,000,000",
-        status: "Sold",
-        statusColor: "green",
-        details: {
-          certificate: "CMA Agreement #992",
-          inboundDate: "01 Aug 2024",
-          expiryDate: "01 Aug 2025",
-          location: "Lampung WMS",
-        },
-      },
-    ],
-    cashPool: {
-      cap: "595,000,000",
-      current: "350,000,000",
-      liquidity: "150,000,000",
-      deployed: "200,000,000",
-      remaining: "245,000,000",
-    },
-    traceability: [
-      {
-        title: "Harvest & Aggregation",
-        description:
-          "Coffee cherries collected from 142 partner farmers in Bener Meriah district.",
-        date: "Sep 12, 2024",
-        tag: "Cooperative Alpha",
-        active: false,
-      },
-      {
-        title: "Processing & Grading",
-        description:
-          "Wet hulling process completed. Quality assessment passed for Grade 1 classification.",
-        date: "Sep 20, 2024",
-        tag: "QC Report #9921",
-        active: false,
-      },
-      {
-        title: "Warehousing (Gudangin)",
-        description:
-          "Commodities entered Gudangin WMS. SRG issued and verified. Collateral locked.",
-        date: "Current Stage",
-        tag: null,
-        active: true,
-      },
-    ],
-    manager: {
-      name: "Nusantara Commodities",
-      person: "Budi Santoso",
-      role: "PT Kopi Nusantara Trading Tbk.",
-      ccrRatio: "145%",
-      vaultsManaged: 12,
-      activeLoans: "12.5B IDRP",
-      totalCollateral: "45.2B IDRP",
-    },
-    documents: [
-      {
-        title: "SRG Certificate #10293",
-        subtitle: "Verified Warehouse Receipt",
-        icon: "description",
-        color: "text-red-500",
-        bg: "bg-red-50",
-      },
-      {
-        title: "Insurance Policy (All-Risk)",
-        subtitle: "Coverage for 1.5B IDRP",
-        icon: "security",
-        color: "text-red-500",
-        bg: "bg-red-50",
-      },
-      {
-        title: "CMA Agreement",
-        subtitle: "Collateral Management Terms",
-        icon: "description",
-        color: "text-blue-500",
-        bg: "bg-blue-50",
-      },
-    ],
-  };
+export default async function InvestmentDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const investmentData = await getInvestmentDetail(id);
 
   return (
     <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-10 py-10 flex flex-col gap-10">
@@ -309,89 +163,7 @@ export default function InvestmentDetailPage() {
 
         {/* Right Column (Sidebar/Funding) */}
         <div className="lg:col-span-5">
-          <div className="bg-white border border-neutral-200 rounded-2xl p-6 lg:p-8 shadow-soft sticky top-24">
-            <div className="flex justify-between items-end mb-4">
-              <div>
-                <p className="text-neutral-500 text-sm font-semibold mb-1">
-                  Total Raised / Target
-                </p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-neutral-900">
-                    {investmentData.funding.totalRaised}
-                  </span>
-                  <span className="text-sm text-neutral-500 font-medium">
-                    / {investmentData.funding.target}
-                  </span>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-primary font-bold text-lg bg-accent/10 px-2 py-0.5 rounded">
-                  {investmentData.funding.percentage}%
-                </span>
-                <p className="text-neutral-500 text-[10px] mt-1 font-semibold">
-                  Funded
-                </p>
-              </div>
-            </div>
-            <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden mb-4">
-              <div
-                className="h-full bg-accent rounded-full relative"
-                style={{ width: `${investmentData.funding.percentage}%` }}
-              ></div>
-            </div>
-            <div className="flex items-center justify-between px-4 py-3 bg-neutral-50 rounded-lg mb-6 border border-neutral-100">
-              <div className="flex items-center gap-2">
-                <Icon
-                  name="percent"
-                  className="text-neutral-400 text-[20px]"
-                />
-                <span className="text-xs font-bold text-neutral-600 uppercase">
-                  LTV Ratio
-                </span>
-              </div>
-              <span className="text-sm font-bold text-neutral-900">
-                {investmentData.funding.ltvRatio}
-              </span>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="block text-sm font-bold text-neutral-700 mb-2">
-                  Investment Amount
-                </label>
-                <div className="relative">
-                  <input
-                    className="block w-full rounded-xl border-neutral-200 bg-neutral-50 py-3.5 pl-4 pr-16 text-lg font-bold text-neutral-900 focus:border-primary focus:ring-primary placeholder:text-neutral-400 focus:outline-none focus:ring-2"
-                    placeholder="0.00"
-                    type="number"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-neutral-500">
-                    IDRP
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-2 text-xs">
-                  <span className="text-neutral-500">
-                    Balance: {investmentData.funding.balance}
-                  </span>
-                  <button className="text-primary font-bold hover:underline">
-                    Max Amount
-                  </button>
-                </div>
-              </div>
-              <Button className="w-full py-4 h-auto bg-primary hover:bg-primary/90 text-white font-bold text-base rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mt-2">
-                <span>Deposit & Invest</span>
-                <Icon name="arrow_forward" className="text-[20px]" />
-              </Button>
-              <p className="text-center text-xs text-neutral-400">
-                By investing, you agree to the{" "}
-                <Link
-                  href="#"
-                  className="text-neutral-600 hover:text-primary font-medium underline"
-                >
-                  Terms of Service
-                </Link>
-              </p>
-            </div>
-          </div>
+          <InvestmentSidebar funding={investmentData.funding} />
         </div>
       </div>
 
@@ -487,15 +259,15 @@ export default function InvestmentDetailPage() {
                   <summary className="grid grid-cols-12 gap-4 px-6 py-4 items-center cursor-pointer hover:bg-neutral-50 transition-colors text-sm list-none">
                     <div className="col-span-3 font-bold text-neutral-900 flex items-center gap-2">
                       <Icon
-                        name="expand_more"
-                        className="text-neutral-400 text-[16px] group-open:rotate-180 transition-transform"
+                        name="keyboard_arrow_down"
+                        className="text-neutral-400 group-open:rotate-180 transition-transform"
                       />
                       {asset.name}
                     </div>
                     <div className="col-span-2 text-neutral-600">
                       {asset.grade}
                     </div>
-                    <div className="col-span-2 text-right font-mono font-medium">
+                    <div className="col-span-2 text-right font-mono text-neutral-900">
                       {asset.quantity}
                     </div>
                     <div className="col-span-3 text-right font-mono font-bold text-primary">
@@ -503,167 +275,55 @@ export default function InvestmentDetailPage() {
                     </div>
                     <div className="col-span-2 flex justify-center">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${asset.statusColor === "blue"
-                          ? "bg-blue-50 text-blue-700 border-blue-100"
+                        className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${asset.statusColor === "blue"
+                          ? "bg-blue-50 text-blue-600 border-blue-200"
                           : asset.statusColor === "yellow"
-                            ? "bg-yellow-50 text-yellow-700 border-yellow-100"
-                            : "bg-green-50 text-green-700 border-green-100"
+                            ? "bg-yellow-50 text-yellow-600 border-yellow-200"
+                            : "bg-green-50 text-green-600 border-green-200"
                           }`}
                       >
                         {asset.status}
                       </span>
                     </div>
                   </summary>
-                  <div className="bg-neutral-50/50 px-6 py-4 border-t border-neutral-100 text-xs">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="px-6 py-4 bg-neutral-50/50 text-xs border-t border-neutral-100">
+                    <div className="grid grid-cols-4 gap-4">
                       <div>
-                        <p className="text-neutral-400 font-medium mb-1">
-                          Certificate / Contract
-                        </p>
-                        <p className="font-semibold text-neutral-700">
+                        <span className="block text-neutral-400 font-bold uppercase mb-1">
+                          Certificate
+                        </span>
+                        <span className="text-neutral-700 font-medium">
                           {asset.details.certificate}
-                        </p>
+                        </span>
                       </div>
                       <div>
-                        <p className="text-neutral-400 font-medium mb-1">
+                        <span className="block text-neutral-400 font-bold uppercase mb-1">
                           Inbound Date
-                        </p>
-                        <p className="font-semibold text-neutral-700">
+                        </span>
+                        <span className="text-neutral-700 font-medium">
                           {asset.details.inboundDate}
-                        </p>
+                        </span>
                       </div>
                       <div>
-                        <p className="text-neutral-400 font-medium mb-1">
+                        <span className="block text-neutral-400 font-bold uppercase mb-1">
                           Expiry Date
-                        </p>
-                        <p className="font-semibold text-neutral-700">
+                        </span>
+                        <span className="text-neutral-700 font-medium">
                           {asset.details.expiryDate}
-                        </p>
+                        </span>
                       </div>
                       <div>
-                        <p className="text-neutral-400 font-medium mb-1">
+                        <span className="block text-neutral-400 font-bold uppercase mb-1">
                           Location
-                        </p>
-                        <p className="font-semibold text-neutral-700">
+                        </span>
+                        <span className="text-neutral-700 font-medium">
                           {asset.details.location}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   </div>
                 </details>
               ))}
-            </div>
-          </section>
-
-          {/* Cash Pool */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
-                <Icon name="savings" className="text-primary" />
-                Cash Pool
-              </h3>
-            </div>
-            <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-100">
-                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Icon
-                      name="account_balance_wallet"
-                      className="text-[16px]"
-                    />
-                    Cash Pool Cap
-                  </p>
-                  <p className="text-2xl font-bold text-neutral-900">
-                    {investmentData.cashPool.cap}{" "}
-                    <span className="text-sm text-neutral-500 font-medium">
-                      IDRP
-                    </span>
-                  </p>
-                  <p className="text-[10px] text-neutral-400 mt-1">
-                    Max Limit (Collateral x 70% LTV)
-                  </p>
-                </div>
-                <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-100">
-                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Icon name="monetization_on" className="text-[16px]" />
-                    Current Cash Pool
-                  </p>
-                  <p className="text-2xl font-bold text-neutral-900">
-                    {investmentData.cashPool.current}{" "}
-                    <span className="text-sm text-neutral-500 font-medium">
-                      IDRP
-                    </span>
-                  </p>
-                  <p className="text-[10px] text-neutral-400 mt-1">
-                    Total Investment Submitted
-                  </p>
-                </div>
-              </div>
-
-              <div className="mb-2">
-                <p className="text-xs font-bold text-neutral-700 mb-3">
-                  Capital Allocation
-                </p>
-                <div className="w-full h-3 flex rounded-full overflow-hidden">
-                  <div className="bg-accent h-full w-[25%]"></div>
-                  <div className="bg-primary h-full w-[34%]"></div>
-                  <div className="bg-neutral-100 h-full w-[41%]"></div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full bg-accent"></div>
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase">
-                      Available Liquidity
-                    </span>
-                  </div>
-                  <p className="font-bold text-neutral-900">
-                    {investmentData.cashPool.liquidity}{" "}
-                    <span className="text-xs text-neutral-500 font-medium">
-                      IDRP
-                    </span>
-                  </p>
-                  <p className="text-[10px] text-neutral-400">
-                    Idle capital (12% of Pool)
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full bg-primary"></div>
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase">
-                      Deployed Capital
-                    </span>
-                  </div>
-                  <p className="font-bold text-neutral-900">
-                    {investmentData.cashPool.deployed}{" "}
-                    <span className="text-xs text-neutral-500 font-medium">
-                      IDRP
-                    </span>
-                  </p>
-                  <p className="text-[10px] text-neutral-400">
-                    Allocated to assets (57% of Pool)
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <div className="size-2 rounded-full bg-neutral-200"></div>
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase">
-                      Remaining Capacity
-                    </span>
-                  </div>
-                  <p className="font-bold text-neutral-900">
-                    {investmentData.cashPool.remaining}{" "}
-                    <span className="text-xs text-neutral-500 font-medium">
-                      IDRP
-                    </span>
-                  </p>
-                  <p className="text-[10px] text-neutral-400">
-                    Open for Investment
-                  </p>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -730,112 +390,142 @@ export default function InvestmentDetailPage() {
           </section>
         </div>
 
-        {/* Sidebar Bottom (Vault Manager & Docs) */}
+        {/* Sidebar Info (Manager, Docs, etc.) */}
         <div className="flex flex-col gap-8">
-          {/* Vault Manager */}
+          {/* Manager Profile */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-4">
+            <h4 className="text-sm font-bold text-neutral-500 uppercase tracking-wider mb-4">
               Vault Manager
-            </p>
-            <div className="flex items-start justify-between mb-6">
+            </h4>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="size-12 rounded-full bg-neutral-100 flex items-center justify-center text-primary font-bold text-lg">
+                NC
+              </div>
               <div>
-                <h4 className="font-bold text-neutral-900 flex items-center gap-1.5">
-                  <Icon name="verified" className="text-primary text-[16px]" />
+                <h5 className="font-bold text-neutral-900">
                   {investmentData.manager.name}
-                </h4>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  {investmentData.manager.person}
-                </p>
-                <p className="text-[10px] text-neutral-400">
+                </h5>
+                <p className="text-xs text-neutral-500 font-medium">
                   {investmentData.manager.role}
                 </p>
               </div>
-              <div className="size-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400">
-                <Icon name="person" className="text-[24px]" />
+            </div>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-100">
+              <div>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase">
+                  CCR Ratio
+                </p>
+                <p className="text-lg font-bold text-primary">
+                  {investmentData.manager.ccrRatio}
+                </p>
               </div>
-            </div>
-
-            <div className="bg-green-50 rounded-xl p-4 mb-6 text-center border border-green-100">
-              <p className="text-xs font-medium text-neutral-600 mb-1">
-                CCR Ratio
-              </p>
-              <p className="text-3xl font-extrabold text-green-600">
-                {investmentData.manager.ccrRatio}
-              </p>
-              <p className="text-[10px] font-bold text-green-700 mt-1">
-                LOW RISK (&gt; 135%)
-              </p>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-500 font-medium">
+              <div>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase">
                   Vaults Managed
-                </span>
-                <span className="font-bold text-neutral-900">
+                </p>
+                <p className="text-lg font-bold text-neutral-900">
                   {investmentData.manager.vaultsManaged}
-                </span>
+                </p>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-500 font-medium">
+              <div>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase">
                   Active Loans
-                </span>
-                <span className="font-bold text-neutral-900">
+                </p>
+                <p className="text-sm font-bold text-neutral-900">
                   {investmentData.manager.activeLoans}
-                </span>
+                </p>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-500 font-medium">
+              <div>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase">
                   Total Collateral
-                </span>
-                <span className="font-bold text-neutral-900">
+                </p>
+                <p className="text-sm font-bold text-neutral-900">
                   {investmentData.manager.totalCollateral}
-                </span>
+                </p>
               </div>
             </div>
-
             <Button
               variant="outline"
-              className="w-full text-xs h-9 border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+              className="w-full mt-6 border-neutral-200 hover:bg-neutral-50"
             >
-              View Full Trader Profile
+              View Full Profile
             </Button>
           </div>
 
+          {/* Cash Pool */}
+          <div className="bg-neutral-900 rounded-2xl p-6 shadow-lg text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Icon name="savings" className="text-8xl" />
+            </div>
+            <h4 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4 relative z-10">
+              Cash Pool Status
+            </h4>
+            <div className="relative z-10">
+              <div className="mb-4">
+                <span className="text-3xl font-bold block">
+                  {investmentData.cashPool.current}
+                </span>
+                <span className="text-xs text-white/60 font-medium">
+                  Current Cash Pool
+                </span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-white/60">Liquidity</span>
+                  <span className="font-bold">
+                    {investmentData.cashPool.liquidity}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-white/60">Deployed</span>
+                  <span className="font-bold">
+                    {investmentData.cashPool.deployed}
+                  </span>
+                </div>
+                <div className="pt-3 border-t border-white/10 flex justify-between text-xs">
+                  <span className="text-accent font-bold">Remaining Cap</span>
+                  <span className="font-bold">
+                    {investmentData.cashPool.remaining}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Documents */}
-          <div>
-            <h3 className="text-base font-bold text-neutral-900 flex items-center gap-2 mb-4">
-              <Icon name="folder_open" className="text-primary" />
-              Documents & Credentials
-            </h3>
+          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+            <h4 className="text-sm font-bold text-neutral-500 uppercase tracking-wider mb-4">
+              Documents & Contracts
+            </h4>
             <div className="flex flex-col gap-3">
               {investmentData.documents.map((doc, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-white border border-neutral-200 rounded-xl hover:shadow-sm transition-shadow cursor-pointer group"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:bg-neutral-50 transition-colors cursor-pointer group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`size-10 rounded-lg ${doc.bg} ${doc.color} flex items-center justify-center shrink-0`}
-                    >
-                      <Icon name={doc.icon} className="text-[20px]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-neutral-900 group-hover:text-primary transition-colors">
-                        {doc.title}
-                      </p>
-                      <p className="text-[10px] text-neutral-500">
-                        {doc.subtitle}
-                      </p>
-                    </div>
+                  <div
+                    className={`size-10 rounded-lg flex items-center justify-center ${doc.bg}`}
+                  >
+                    <Icon name={doc.icon} className={doc.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="text-xs font-bold text-neutral-900 truncate group-hover:text-primary transition-colors">
+                      {doc.title}
+                    </h5>
+                    <p className="text-[10px] text-neutral-500 truncate">
+                      {doc.subtitle}
+                    </p>
                   </div>
                   <Icon
                     name="download"
-                    className="text-neutral-400 text-[18px] group-hover:text-primary"
+                    className="text-neutral-300 group-hover:text-primary transition-colors"
                   />
                 </div>
               ))}
             </div>
+            <Button variant="ghost" className="w-full mt-4 text-xs font-bold">
+              View All Documents
+            </Button>
           </div>
         </div>
       </div>

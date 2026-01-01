@@ -1,147 +1,12 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
+import { getInvestments } from "@/data/investments";
 
-interface Investment {
-  id: string;
-  title: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  status: "OPEN" | "CLOSED";
-  collateralValue: string;
-  certificate: {
-    issuer: string;
-    verified: boolean;
-  };
-  validity: string;
-  profitShare: string;
-  funded: {
-    current: string;
-    target: string;
-    percentage: number;
-  };
-  theme: "accent" | "blue";
-}
+export default async function InvestmentPage() {
+  const investments = await getInvestments();
 
-const INVESTMENTS: Investment[] = [
-  {
-    id: "1",
-    title: "Robusta Harvest Batch #402",
-    author: {
-      name: "Budi Santoso",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAVkAGQU_KZ_f7AbDBXZDwX81Tam-MB18qjkKcbW4CqWw6g2f6aWruxzSxAFdBzlZs4fX5cAa8xtipo467NCsrlF6zEwgke9cEaaRZWRO2lJGn2BORDpBbo_RDRL6y6QIk6jbe4vBLtq9NJ6OLjsapqUcY8gnjQg6gBaLEFlM9onv8zCAFQ1KyW80n9Cp4oL4Dt8F6h0gAyqRHrk8BUX6O3mb4sEEnZZZjA3GcUN7OXw9G7YiQWuBn1rFtBYxUj1h2WEZV9esSxZ-_Y",
-    },
-    status: "OPEN",
-    collateralValue: "500M IDRP",
-    certificate: {
-      issuer: "Gudangin SRG",
-      verified: true,
-    },
-    validity: "12 Dec 2024",
-    profitShare: "70:30",
-    funded: {
-      current: "325M",
-      target: "350M",
-      percentage: 92,
-    },
-    theme: "accent",
-  },
-  {
-    id: "2",
-    title: "Arabica Gayo Premium",
-    author: {
-      name: "Sarah Wijaya",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB9cHkhwKarfKaRhddJsGv4bCa42cZB4c_FML6KDTvVFoYCmdazmM9Tf9nLkFM68P01hnExmgz8_TF-OKJvRSWhMgLSs8SkAMHVVm6_7VynOtKS08ocHG4nkjyjnXs0HqXVi9-tU8U-6582g7bThcRKbqK5RT1tQcbI4mOrhikSQIDbaYkaFHjpBrOJGTqlAVI_BxAJ2wHLCH7QvUX_PjX7wJO0pr1J3pDgoGlfILvxvWRVYdC_LHmyOeijvpy4pktyZnEq17T9jMlK",
-    },
-    status: "OPEN",
-    collateralValue: "1.2B IDRP",
-    certificate: {
-      issuer: "CMA Logistik",
-      verified: true,
-    },
-    validity: "15 Jan 2025",
-    profitShare: "70:30",
-    funded: {
-      current: "750M",
-      target: "840M",
-      percentage: 89,
-    },
-    theme: "blue",
-  },
-  {
-    id: "3",
-    title: "Lampung Fine Green",
-    author: {
-      name: "Agus Salim",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3QiYTmVlf_5ca8vOL2y3a_UVWwNVOT-dz3E_fJWuMFCaXmz51Sol8M45bcPRtTciWF0Z5QVpmViZaPLlCoT4vGaLgPH7wO0SjJRbzVTpxkhG779oYAKrNCCTkTaRAvoQtNqWRNhjQXHxu0AlnlLMdDykGN0cRFsjTBw8NnsmR6WBEzrO_GzXD5uJI0DY2NoP-CBHxgoDNti9WV_mAY-ILwpy4Y2lFAKy7V1bJDRuj_DdDL6gKA9uQA3ZO9tB920KWjOKosBpCr6Lb",
-    },
-    status: "CLOSED",
-    collateralValue: "250M IDRP",
-    certificate: {
-      issuer: "Gudangin SRG",
-      verified: true,
-    },
-    validity: "Expired",
-    profitShare: "75:25",
-    funded: {
-      current: "175M",
-      target: "175M",
-      percentage: 100,
-    },
-    theme: "accent",
-  },
-  {
-    id: "4",
-    title: "Java Preanger Arabica",
-    author: {
-      name: "Kevin H.",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAqhCrCUxCS3X-fFhpBSrM2lQ_k7WE03aHSOm6U58Q9FIukTFVppU6DDSfAZS9MAYH7az1C9RL2C8in0G5YWyuCiAFXirwdH7VQUYcPJgwZlYAFQHlmw83zhMhmJn71dQ2XhekanY04-OHLIuJrUT398PCJkSZU_CT61dfSkHUQD5pP5T71L4GnmXWYoRl_fqkvClzVMms__jcnEMr8Oh9HpvwyXt7JjjujgnNupU7K67bIgvQXyoFdJV970P58s1zTqsAhCKVQ2wbT",
-    },
-    status: "OPEN",
-    collateralValue: "800M IDRP",
-    certificate: {
-      issuer: "CMA Logistik",
-      verified: true,
-    },
-    validity: "20 Feb 2025",
-    profitShare: "70:30",
-    funded: {
-      current: "80M",
-      target: "560M",
-      percentage: 14,
-    },
-    theme: "blue",
-  },
-  {
-    id: "5",
-    title: "Toraja Sapan Specialty",
-    author: {
-      name: "Maria L.",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBjlUcIzSVhCqDyYJjjDxYHcHCP10v8TpKSauO5ZvGeRE5zFrG2YGcCL5G-WmqO__2ai_C1mzW_OaZxsPFJRuuNlLDDDZQy8yIhnh-Og1TyDDjTOn3i5G1Z8DYI1V9vQ8-xQTWmAXh85Lu7kosxqZJqWSnwK4IJeSRjKiakpDIOg_K8L01ac2Fxghe4PboUZIsDxSBWtr9afFNzcPmyrhOdx74nDB5tBXBzsgRPCfAAofbdT8qn2A4zDjihVhtRZjJahumg7o87G12T",
-    },
-    status: "OPEN",
-    collateralValue: "450M IDRP",
-    certificate: {
-      issuer: "Gudangin SRG",
-      verified: true,
-    },
-    validity: "05 Mar 2025",
-    profitShare: "80:20",
-    funded: {
-      current: "270M",
-      target: "315M",
-      percentage: 85,
-    },
-    theme: "accent",
-  },
-];
-
-export default function InvestmentPage() {
   return (
     <main className="flex-1 w-full px-4 md:px-8 py-8 flex flex-col gap-8 overflow-hidden">
       <div className="flex items-center justify-between">
@@ -164,7 +29,7 @@ export default function InvestmentPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {INVESTMENTS.map((investment) => (
+        {investments.map((investment) => (
           <article
             key={investment.id}
             className={`group flex flex-col bg-white border border-neutral-200 rounded-2xl overflow-hidden hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] transition-all duration-300 relative border-t-4 ${investment.theme === "accent"
