@@ -2,10 +2,10 @@ import React from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { getInvestments } from "@/data/investments";
+import { api } from "@/trpc/server";
 
 export default async function InvestmentPage() {
-  const investments = await getInvestments();
+  const investments = await api.vault.getAll();
 
   return (
     <main className="flex-1 w-full px-4 md:px-8 py-8 flex flex-col gap-8 overflow-hidden">

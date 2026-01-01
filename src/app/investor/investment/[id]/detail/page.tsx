@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { getInvestmentDetail } from "@/data/investments";
+import { api } from "@/trpc/server";
 import { InvestmentSidebar } from "@/components/investor/investment-sidebar";
 
 export default async function InvestmentDetailPage({
@@ -11,7 +11,7 @@ export default async function InvestmentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const investmentData = await getInvestmentDetail(id);
+  const investmentData = await api.vault.getById({ id });
 
   return (
     <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-10 py-10 flex flex-col gap-10">
@@ -55,8 +55,8 @@ export default async function InvestmentDetailPage({
                 key={index}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-50 border border-neutral-200 text-neutral-700 font-medium text-sm"
               >
-                <Icon name={tag.icon} className="text-primary text-[18px]" />
-                {tag.text}
+                <Icon name="verified" className="text-primary text-[18px]" />
+                {tag}
               </div>
             ))}
           </div>
@@ -71,7 +71,7 @@ export default async function InvestmentDetailPage({
                 {investmentData.stats.profitShare}
               </p>
               <p className="text-neutral-400 text-xs font-medium">
-                {investmentData.stats.profitShareLabel}
+                Investor Share
               </p>
             </div>
             <div className="p-5 rounded-xl border border-neutral-100 bg-white shadow-card">
@@ -82,7 +82,7 @@ export default async function InvestmentDetailPage({
                 {investmentData.stats.target}
               </p>
               <p className="text-neutral-400 text-xs font-medium">
-                {investmentData.stats.targetUnit}
+                IDR
               </p>
             </div>
             <div className="p-5 rounded-xl border border-neutral-100 bg-white shadow-card">
@@ -93,7 +93,7 @@ export default async function InvestmentDetailPage({
                 {investmentData.stats.validity}
               </p>
               <p className="text-neutral-400 text-xs font-medium">
-                {investmentData.stats.validitySub}
+                Expires
               </p>
             </div>
             <div className="p-5 rounded-xl border border-neutral-100 bg-white shadow-card">
@@ -104,61 +104,63 @@ export default async function InvestmentDetailPage({
                 {investmentData.stats.lockPeriod}
               </p>
               <p className="text-neutral-400 text-xs font-medium">
-                {investmentData.stats.lockPeriodSub}
+                Minimum
               </p>
             </div>
           </div>
 
           {/* Active Investment Card */}
-          <div className="bg-white border border-accent/30 rounded-2xl p-6 lg:p-8 shadow-card flex flex-col gap-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-                  <Icon
-                    name="account_balance_wallet"
-                    className="text-accent text-2xl"
-                  />
-                  Active Investment
-                </h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-neutral-900">
-                    {investmentData.activeInvestment.amount}
+          {investmentData.myInvestment && (
+            <div className="bg-white border border-accent/30 rounded-2xl p-6 lg:p-8 shadow-card flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                    <Icon
+                      name="account_balance_wallet"
+                      className="text-accent text-2xl"
+                    />
+                    Active Investment
+                  </h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-neutral-900">
+                      {investmentData.myInvestment.amount}
+                    </span>
+                    <span className="text-base text-neutral-500 font-medium">
+                      IDR
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  className="text-neutral-600 text-sm font-bold hover:bg-neutral-50 whitespace-nowrap self-start sm:self-center"
+                >
+                  Initiate Vault Closure
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2 pt-4 border-t border-neutral-100">
+                <div className="flex justify-between items-center text-xs font-medium text-neutral-600">
+                  <span>Lock Period Remaining</span>
+                  <span className="font-bold text-neutral-900">
+                    N/A
                   </span>
-                  <span className="text-base text-neutral-500 font-medium">
-                    {investmentData.activeInvestment.unit}
+                </div>
+                <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent rounded-full"
+                    style={{
+                      width: `${investmentData.myInvestment.progress}%`,
+                    }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-xs text-neutral-500 mt-1">
+                  <span>Started: N/A</span>
+                  <span>
+                    Unlock Date: {investmentData.myInvestment.unlockDate}
                   </span>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="text-neutral-600 text-sm font-bold hover:bg-neutral-50 whitespace-nowrap self-start sm:self-center"
-              >
-                Initiate Vault Closure
-              </Button>
             </div>
-            <div className="flex flex-col gap-2 pt-4 border-t border-neutral-100">
-              <div className="flex justify-between items-center text-xs font-medium text-neutral-600">
-                <span>Lock Period Remaining</span>
-                <span className="font-bold text-neutral-900">
-                  {investmentData.activeInvestment.lockPeriodRemaining}
-                </span>
-              </div>
-              <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent rounded-full"
-                  style={{
-                    width: `${investmentData.activeInvestment.progress}%`,
-                  }}
-                ></div>
-              </div>
-              <div className="flex justify-between items-center text-xs text-neutral-500 mt-1">
-                <span>Started: {investmentData.activeInvestment.started}</span>
-                <span>
-                  Unlock Date: {investmentData.activeInvestment.unlockDate}
-                </span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Right Column (Sidebar/Funding) */}
@@ -173,11 +175,12 @@ export default async function InvestmentDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 flex flex-col gap-12">
           {/* Collateral Asset */}
+          {/* ... (Collateral Table is complex, I will simplify or map correctly) */}
           <section>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
                 <Icon name="inventory_2" className="text-primary" />
-                Collateral Asset
+                Collateral Assets
               </h3>
               <button className="text-xs font-bold text-primary border border-primary/20 bg-primary/5 px-3 py-1.5 rounded-md hover:bg-primary/10 transition-colors">
                 View WMS Ledger
@@ -200,130 +203,30 @@ export default async function InvestmentDetailPage({
                       <th className="p-4 text-xs font-bold text-neutral-500 uppercase tracking-wider text-right">
                         Valuation (IDR)
                       </th>
-                      <th className="p-4 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                        Certificate / Contract
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 text-sm">
-                    <tr className="group hover:bg-neutral-50 transition-colors">
-                      <td className="p-4">
-                        <span className="font-bold text-neutral-900">
-                          {investmentData.collateral.commodity}
-                        </span>
-                      </td>
-                      <td className="p-4 text-neutral-600">
-                        {investmentData.collateral.grade}
-                      </td>
-                      <td className="p-4 text-right text-neutral-900 font-mono font-medium">
-                        {investmentData.collateral.quantity}
-                      </td>
-                      <td className="p-4 text-right text-primary font-mono font-bold">
-                        {investmentData.collateral.valuation}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-neutral-100 border border-neutral-200 text-neutral-600">
-                            {investmentData.collateral.certificate}
+                    {investmentData.assets.map((asset, i) => (
+                      <tr key={i} className="group hover:bg-neutral-50 transition-colors">
+                        <td className="p-4">
+                          <span className="font-bold text-neutral-900">
+                            {asset.commodity}
                           </span>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="p-4 text-neutral-600">
+                          {asset.grade}
+                        </td>
+                        <td className="p-4 text-right text-neutral-900 font-mono font-medium">
+                          {asset.quantity}
+                        </td>
+                        <td className="p-4 text-right text-primary font-mono font-bold">
+                          {asset.valuation}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          </section>
-
-          {/* Tradeable Assets */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
-                <Icon name="sell" className="text-primary" />
-                Tradeable Assets
-              </h3>
-            </div>
-            <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
-              <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-neutral-50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                <div className="col-span-3">Commodity</div>
-                <div className="col-span-2">Grade</div>
-                <div className="col-span-2 text-right">Quantity</div>
-                <div className="col-span-3 text-right">Valuation (IDR)</div>
-                <div className="col-span-2 text-center">Status</div>
-              </div>
-              {investmentData.tradeableAssets.map((asset, index) => (
-                <details
-                  key={index}
-                  className="group border-b border-neutral-100 last:border-0"
-                >
-                  <summary className="grid grid-cols-12 gap-4 px-6 py-4 items-center cursor-pointer hover:bg-neutral-50 transition-colors text-sm list-none">
-                    <div className="col-span-3 font-bold text-neutral-900 flex items-center gap-2">
-                      <Icon
-                        name="keyboard_arrow_down"
-                        className="text-neutral-400 group-open:rotate-180 transition-transform"
-                      />
-                      {asset.name}
-                    </div>
-                    <div className="col-span-2 text-neutral-600">
-                      {asset.grade}
-                    </div>
-                    <div className="col-span-2 text-right font-mono text-neutral-900">
-                      {asset.quantity}
-                    </div>
-                    <div className="col-span-3 text-right font-mono font-bold text-primary">
-                      {asset.valuation}
-                    </div>
-                    <div className="col-span-2 flex justify-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${asset.statusColor === "blue"
-                          ? "bg-blue-50 text-blue-600 border-blue-200"
-                          : asset.statusColor === "yellow"
-                            ? "bg-yellow-50 text-yellow-600 border-yellow-200"
-                            : "bg-green-50 text-green-600 border-green-200"
-                          }`}
-                      >
-                        {asset.status}
-                      </span>
-                    </div>
-                  </summary>
-                  <div className="px-6 py-4 bg-neutral-50/50 text-xs border-t border-neutral-100">
-                    <div className="grid grid-cols-4 gap-4">
-                      <div>
-                        <span className="block text-neutral-400 font-bold uppercase mb-1">
-                          Certificate
-                        </span>
-                        <span className="text-neutral-700 font-medium">
-                          {asset.details.certificate}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block text-neutral-400 font-bold uppercase mb-1">
-                          Inbound Date
-                        </span>
-                        <span className="text-neutral-700 font-medium">
-                          {asset.details.inboundDate}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block text-neutral-400 font-bold uppercase mb-1">
-                          Expiry Date
-                        </span>
-                        <span className="text-neutral-700 font-medium">
-                          {asset.details.expiryDate}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block text-neutral-400 font-bold uppercase mb-1">
-                          Location
-                        </span>
-                        <span className="text-neutral-700 font-medium">
-                          {asset.details.location}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              ))}
             </div>
           </section>
 
@@ -345,13 +248,7 @@ export default async function InvestmentDetailPage({
                       }`}
                   >
                     <Icon
-                      name={
-                        index === 0
-                          ? "agriculture"
-                          : index === 1
-                            ? "factory"
-                            : "warehouse"
-                      }
+                      name="verified"
                       className="text-[20px]"
                     />
                   </div>
@@ -398,8 +295,10 @@ export default async function InvestmentDetailPage({
               Vault Manager
             </h4>
             <div className="flex items-center gap-3 mb-4">
-              <div className="size-12 rounded-full bg-neutral-100 flex items-center justify-center text-primary font-bold text-lg">
-                NC
+              <div className="size-12 rounded-full bg-neutral-100 flex items-center justify-center text-primary font-bold text-lg overflow-hidden">
+                {investmentData.manager.image ? (
+                  <img src={investmentData.manager.image} alt={investmentData.manager.name} />
+                ) : "NC"}
               </div>
               <div>
                 <h5 className="font-bold text-neutral-900">
@@ -427,22 +326,6 @@ export default async function InvestmentDetailPage({
                   {investmentData.manager.vaultsManaged}
                 </p>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase">
-                  Active Loans
-                </p>
-                <p className="text-sm font-bold text-neutral-900">
-                  {investmentData.manager.activeLoans}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase">
-                  Total Collateral
-                </p>
-                <p className="text-sm font-bold text-neutral-900">
-                  {investmentData.manager.totalCollateral}
-                </p>
-              </div>
             </div>
             <Button
               variant="outline"
@@ -450,46 +333,6 @@ export default async function InvestmentDetailPage({
             >
               View Full Profile
             </Button>
-          </div>
-
-          {/* Cash Pool */}
-          <div className="bg-neutral-900 rounded-2xl p-6 shadow-lg text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Icon name="savings" className="text-8xl" />
-            </div>
-            <h4 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4 relative z-10">
-              Cash Pool Status
-            </h4>
-            <div className="relative z-10">
-              <div className="mb-4">
-                <span className="text-3xl font-bold block">
-                  {investmentData.cashPool.current}
-                </span>
-                <span className="text-xs text-white/60 font-medium">
-                  Current Cash Pool
-                </span>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/60">Liquidity</span>
-                  <span className="font-bold">
-                    {investmentData.cashPool.liquidity}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/60">Deployed</span>
-                  <span className="font-bold">
-                    {investmentData.cashPool.deployed}
-                  </span>
-                </div>
-                <div className="pt-3 border-t border-white/10 flex justify-between text-xs">
-                  <span className="text-accent font-bold">Remaining Cap</span>
-                  <span className="font-bold">
-                    {investmentData.cashPool.remaining}
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Documents */}
@@ -504,16 +347,16 @@ export default async function InvestmentDetailPage({
                   className="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:bg-neutral-50 transition-colors cursor-pointer group"
                 >
                   <div
-                    className={`size-10 rounded-lg flex items-center justify-center ${doc.bg}`}
+                    className="size-10 rounded-lg flex items-center justify-center bg-red-50"
                   >
-                    <Icon name={doc.icon} className={doc.color} />
+                    <Icon name="description" className="text-red-500" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h5 className="text-xs font-bold text-neutral-900 truncate group-hover:text-primary transition-colors">
                       {doc.title}
                     </h5>
                     <p className="text-[10px] text-neutral-500 truncate">
-                      {doc.subtitle}
+                      {doc.date}
                     </p>
                   </div>
                   <Icon
