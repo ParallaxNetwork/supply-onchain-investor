@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, VaultStatus, CommodityType, SignatureRequestType } from "../generated/prisma/client";
+import { PrismaClient, UserRole, VaultStatus, CommodityType, SignatureRequestType, DocumentKind, CertificateType, TraceEventType } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
@@ -32,9 +32,9 @@ async function main() {
     update: {},
     create: {
       email: traderEmail,
-      name: "Alice Trader",
+      name: "Budi Santoso", // Updated to match mock
       role: UserRole.TRADER,
-      image: "https://ui-avatars.com/api/?name=Alice+Trader&background=random",
+      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAVkAGQU_KZ_f7AbDBXZDwX81Tam-MB18qjkKcbW4CqWw6g2f6aWruxzSxAFdBzlZs4fX5cAa8xtipo467NCsrlF6zEwgke9cEaaRZWRO2lJGn2BORDpBbo_RDRL6y6QIk6jbe4vBLtq9NJ6OLjsapqUcY8gnjQg6gBaLEFlM9onv8zCAFQ1KyW80n9Cp4oL4Dt8F6h0gAyqRHrk8BUX6O3mb4sEEnZZZjA3GcUN7OXw9G7YiQWuBn1rFtBYxUj1h2WEZV9esSxZ-_Y",
     },
   });
   console.log("Created Trader:", trader.name);
@@ -55,66 +55,178 @@ async function main() {
   // 2. Create Warehouse
   const warehouse = await db.warehouse.create({
     data: {
-      name: "Central Coffee Storage",
+      name: "Gudangin WMS",
       isVerified: true,
-      wmsSystem: "WMS-2024-X",
+      wmsSystem: "Gudangin-v1",
     },
   });
   console.log("Created Warehouse:", warehouse.name);
 
-  // 3. Create Commodity Lot
-  const commodityLot = await db.commodityLot.create({
+  // 3. Create Commodity Lots (Matching Tradeable Assets)
+  const lotA = await db.commodityLot.create({
     data: {
       commodityType: CommodityType.COFFEE,
       coffeeType: "Arabica",
       coffeeGrade: "Grade 1",
       coffeeOrigin: "Aceh Gayo",
-      weightGrams: 1000000n, // 1000 kg
-      tokenId: 1n, // Token ID #1
+      weightGrams: 5000000n, // 5,000 kg
+      tokenId: 1n,
+      ownerUserId: trader.id,
+      warehouseId: warehouse.id,
+      traceEvents: {
+        create: [
+          {
+            type: TraceEventType.CREATED,
+            occurredAt: new Date("2024-09-12"),
+            location: "Bener Meriah",
+            metadata: { description: "Harvest & Aggregation", tag: "Cooperative Alpha" }
+          },
+          {
+            type: TraceEventType.INSPECTED,
+            occurredAt: new Date("2024-09-20"),
+            location: "Processing Center",
+            metadata: { description: "Processing & Grading", tag: "QC Report #9921" }
+          },
+          {
+            type: TraceEventType.STORED,
+            occurredAt: new Date(), // Current Stage
+            location: "Gudangin WMS",
+            metadata: { description: "Warehousing (Gudangin)", active: true }
+          }
+        ]
+      }
+    },
+  });
+  console.log("Created Lot A with Trace Events");
+
+  const lotB = await db.commodityLot.create({
+    data: {
+      commodityType: CommodityType.COFFEE,
+      coffeeType: "Arabica",
+      coffeeGrade: "Grade 1",
+      coffeeOrigin: "Aceh Gayo",
+      weightGrams: 8000000n, // 8,000 kg
+      tokenId: 2n,
       ownerUserId: trader.id,
       warehouseId: warehouse.id,
     },
   });
-  console.log("Created Commodity Lot:", commodityLot.id);
 
-  // 4. Create Vault
+  const lotX = await db.commodityLot.create({
+    data: {
+      commodityType: CommodityType.COFFEE,
+      coffeeType: "Robusta",
+      coffeeGrade: "Grade 2",
+      coffeeOrigin: "Lampung",
+      weightGrams: 7000000n, // 7,000 kg
+      tokenId: 3n,
+      ownerUserId: trader.id,
+      warehouseId: warehouse.id,
+    },
+  });
+
+  // 4. Create Certificates
+  const srgCert = await db.collateralCertificate.create({
+    data: {
+      type: CertificateType.SRG,
+      certificateNumber: "SRG #10293",
+      issuerName: "Gudangin SRG",
+      issuedAt: new Date("2024-10-15"),
+      expiresAt: new Date("2025-10-15"),
+      commodityLotId: lotA.id,
+    }
+  });
+
+  const cmaCert = await db.collateralCertificate.create({
+    data: {
+      type: CertificateType.CMA,
+      certificateNumber: "CMA #992",
+      issuerName: "CMA Logistik",
+      commodityLotId: lotX.id,
+    }
+  });
+
+  // 5. Create Documents
+  const srgDoc = await db.document.create({
+    data: {
+      kind: DocumentKind.SRG_CERTIFICATE,
+      storageKey: "mock/srg_cert.pdf",
+      url: "https://example.com/srg.pdf",
+      metadata: { title: "SRG Certificate #10293", subtitle: "Verified Warehouse Receipt" }
+    }
+  });
+
+  const insuranceDoc = await db.document.create({
+    data: {
+      kind: DocumentKind.OTHER, // Assuming Insurance fits here
+      storageKey: "mock/insurance.pdf",
+      url: "https://example.com/insurance.pdf",
+      metadata: { title: "Insurance Policy (All-Risk)", subtitle: "Coverage for 1.5B IDRP" }
+    }
+  });
+
+  const cmaDoc = await db.document.create({
+    data: {
+      kind: DocumentKind.CMA_CONTRACT,
+      storageKey: "mock/cma.pdf",
+      url: "https://example.com/cma.pdf",
+      metadata: { title: "CMA Agreement", subtitle: "Collateral Management Terms" }
+    }
+  });
+
+  // 6. Create Vault (Linking it all)
   const vault = await db.vault.create({
     data: {
-      name: "Aceh Gayo Premium Harvest 2024",
-      description: "High-altitude Arabica coffee from the Gayo highlands. Fully washed and sun-dried.",
+      name: "Gayo Coffee Harvest 2024", // Match mock title
+      description: "Invest in high-grade Arabica coffee sourced directly from the Gayo highlands. Backed by physical inventory managed under the SRG scheme.",
       traderUserId: trader.id,
       adminUserId: admin.id,
       investorSignerUserId: investor.id,
-      status: VaultStatus.ACTIVE,
-      collateralValue: 150000000n, // 150M IDR
-      fundTargetBps: 8000, // 80%
-      profitShareBps: 2000, // 20%
-      traderCcrBps: 1000, // 10%
-      totalInvested: 10000000n, // 10M IDR
-      totalSpent: 0n,
-      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
+      status: VaultStatus.OPEN, // Match mock status
+      collateralValue: 850000000n, // 850M IDR (Valuation)
+      fundTargetBps: 7000, // 70% (LTV)
+      profitShareBps: 3000, // 30% (Trader Share, so Investor gets 70%?) Mock says "70:30 Investor:Trader", so profitShareBps usually tracks one side. Assuming this is Trader's share.
+      traderCcrBps: 1000,
+      totalInvested: 350000000n, // 350M Raised
+      totalSpent: 200000000n, // 200M Deployed
+      contractAddress: "0xMockContractAddress",
+
+      // Link Collateral (Lot A)
       collateral: {
-        create: {
-          commodityLotId: commodityLot.id,
-          collateralValue: 150000000n,
-        },
+        create: [
+          {
+            commodityLotId: lotA.id,
+            certificateId: srgCert.id,
+            collateralValue: 212500000n, // Valuation of Lot A
+          },
+          // In a real scenario, you'd add Lot B and X here if they are collateral for *this* vault
+        ]
       },
+
+      // Link Documents
+      documents: {
+        create: [
+          { documentId: srgDoc.id },
+          { documentId: insuranceDoc.id },
+          { documentId: cmaDoc.id } // Linking broadly to the vault for display
+        ]
+      }
     },
   });
   console.log("Created Vault:", vault.name);
 
-  // 5. Create Investment
+  // 7. Create Investment
   const investment = await db.vaultInvestment.create({
     data: {
       vaultId: vault.id,
       investorUserId: investor.id,
-      amount: 10000000n, // 10M IDR
+      amount: 120000000n, // 120M IDR (Active Investment)
       status: "CONFIRMED",
     },
   });
   console.log("Created Investment for:", investor.name);
 
-  // 6. Create Fund Release Request
+  // 8. Create Fund Release Request
   const signatureRequest = await db.signatureRequest.create({
     data: {
       type: SignatureRequestType.FUND_RELEASE,
@@ -124,7 +236,7 @@ async function main() {
       fundRelease: {
         create: {
           vendorAddress: "0xVendorAddress123",
-          amount: 50000000n, // 50M IDR
+          amount: 50000000n,
           description: "Payment for fertilizer shipment",
         },
       },
