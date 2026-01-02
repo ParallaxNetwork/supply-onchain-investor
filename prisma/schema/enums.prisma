@@ -95,6 +95,9 @@ enum TraceEventType {
 
 enum SignatureRequestType {
   FUND_RELEASE
+  ADD_ASSET
+  CLOSE_VAULT
+  CASH_OUT
   OTHER
 }
 

@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, VaultStatus, CommodityType, SignatureRequestType, DocumentKind, CertificateType, TraceEventType } from "../generated/prisma/client";
+import { PrismaClient, UserRole, VaultStatus, CommodityType, SignatureRequestType, SignatureRequestStatus, DocumentKind, CertificateType, TraceEventType, WalletCurrency, WalletTransactionType, WalletTransactionStatus, KycStatus, MarketplaceListingStatus, MarketplaceInvestmentStatus } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
@@ -16,12 +16,27 @@ async function main() {
   const adminEmail = "admin@example.com";
   const admin = await db.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: {
+      name: "Admin User",
+      role: UserRole.ADMIN,
+    },
     create: {
       email: adminEmail,
       name: "Admin User",
       role: UserRole.ADMIN,
       image: "https://ui-avatars.com/api/?name=Admin+User&background=random",
+      profile: {
+        create: {
+          fullName: "Admin User",
+          country: "Indonesia",
+        }
+      },
+      wallet: {
+        create: {
+          currency: WalletCurrency.IDRP,
+          balance: 0n,
+        }
+      }
     },
   });
   console.log("Created Admin:", admin.name);
@@ -29,12 +44,29 @@ async function main() {
   const traderEmail = "trader@example.com";
   const trader = await db.user.upsert({
     where: { email: traderEmail },
-    update: {},
+    update: {
+      name: "Budi Santoso",
+      role: UserRole.TRADER,
+    },
     create: {
       email: traderEmail,
       name: "Budi Santoso", // Updated to match mock
       role: UserRole.TRADER,
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAVkAGQU_KZ_f7AbDBXZDwX81Tam-MB18qjkKcbW4CqWw6g2f6aWruxzSxAFdBzlZs4fX5cAa8xtipo467NCsrlF6zEwgke9cEaaRZWRO2lJGn2BORDpBbo_RDRL6y6QIk6jbe4vBLtq9NJ6OLjsapqUcY8gnjQg6gBaLEFlM9onv8zCAFQ1KyW80n9Cp4oL4Dt8F6h0gAyqRHrk8BUX6O3mb4sEEnZZZjA3GcUN7OXw9G7YiQWuBn1rFtBYxUj1h2WEZV9esSxZ-_Y",
+      profile: {
+        create: {
+          fullName: "Budi Santoso",
+          phoneNumber: "+6281234567890",
+          city: "Jakarta",
+          country: "Indonesia",
+        }
+      },
+      wallet: {
+        create: {
+          currency: WalletCurrency.IDRP,
+          balance: 50000000n, // 50M IDRP
+        }
+      }
     },
   });
   console.log("Created Trader:", trader.name);
@@ -42,15 +74,90 @@ async function main() {
   const investorEmail = "investor@example.com";
   const investor = await db.user.upsert({
     where: { email: investorEmail },
-    update: {},
+    update: {
+      name: "Bob Investor",
+      role: UserRole.INVESTOR,
+    },
     create: {
       email: investorEmail,
       name: "Bob Investor",
       role: UserRole.INVESTOR,
       image: "https://ui-avatars.com/api/?name=Bob+Investor&background=random",
+      profile: {
+        create: {
+          fullName: "Bob Investor",
+          city: "Singapore",
+          country: "Singapore",
+        }
+      },
+      wallet: {
+        create: {
+          currency: WalletCurrency.IDRP,
+          balance: 1000000000n, // 1B IDRP
+          transactions: {
+            create: [
+              {
+                type: WalletTransactionType.DEPOSIT,
+                status: WalletTransactionStatus.POSTED,
+                amount: 1000000000n,
+                referenceId: "DEP-001",
+                metadata: { bank: "BCA", account: "****1234" }
+              }
+            ]
+          }
+        }
+      }
     },
   });
   console.log("Created Investor:", investor.name);
+
+  const mockInvestorEmail = "mock-investor@example.com";
+  const mockInvestor = await db.user.upsert({
+    where: { email: mockInvestorEmail },
+    update: {
+      name: "Mock INVESTOR",
+      role: UserRole.INVESTOR,
+    },
+    create: {
+      email: mockInvestorEmail,
+      name: "Mock INVESTOR",
+      role: UserRole.INVESTOR,
+      image: "https://ui-avatars.com/api/?name=Mock+Investor&background=random",
+      profile: {
+        create: {
+          fullName: "Mock Investor",
+          city: "Jakarta",
+          country: "Indonesia",
+        }
+      },
+      wallet: {
+        create: {
+          currency: WalletCurrency.IDRP,
+          balance: 1000000000n,
+        }
+      }
+    },
+  });
+  console.log("Created Mock Investor:", mockInvestor.name);
+
+  // 1b. Create KYC Applications
+  await db.kycApplication.create({
+    data: {
+      userId: trader.id,
+      status: KycStatus.APPROVED,
+      reviewedByUserId: admin.id,
+      reviewedAt: new Date(),
+    }
+  });
+
+  await db.kycApplication.create({
+    data: {
+      userId: investor.id,
+      status: KycStatus.PENDING,
+      submittedAt: new Date(),
+    }
+  });
+  console.log("Created KYC Applications");
 
   // 2. Create Warehouse
   const warehouse = await db.warehouse.create({
@@ -111,6 +218,28 @@ async function main() {
       warehouseId: warehouse.id,
     },
   });
+
+  // Create Marketplace Listing for Lot B
+  await db.marketplaceListing.create({
+    data: {
+      commodityLotId: lotB.id,
+      ownerUserId: trader.id,
+      warehouseId: warehouse.id,
+      status: MarketplaceListingStatus.ACTIVE,
+      collateralValue: 1000000000n, // 1B IDRP
+      profitShareBps: 2000, // 20%
+      investments: {
+        create: [
+          {
+            investorUserId: investor.id,
+            amount: 50000000n, // 50M IDRP
+            status: MarketplaceInvestmentStatus.CONFIRMED,
+          }
+        ]
+      }
+    }
+  });
+  console.log("Created Marketplace Listing for Lot B");
 
   const lotX = await db.commodityLot.create({
     data: {
@@ -243,6 +372,152 @@ async function main() {
     },
   });
   console.log("Created Fund Release Request:", signatureRequest.id);
+
+  // Add Signature
+  await db.signature.create({
+    data: {
+      requestId: signatureRequest.id,
+      signerUserId: trader.id,
+      signerRole: UserRole.TRADER,
+      signature: "0xMockSignatureByTrader",
+      signedAt: new Date(),
+    }
+  });
+  console.log("Added Signature to Request");
+
+  // 8b. Create Add Asset Request
+  const addAssetRequest = await db.signatureRequest.create({
+    data: {
+      type: SignatureRequestType.ADD_ASSET,
+      createdByUserId: trader.id,
+      vaultId: vault.id,
+      requiredSignatures: 2,
+      payload: {
+        asset: "Cocoa Beans",
+        reason: "Market diversification",
+        description: "Adding Cocoa Beans as a new tradeable asset class."
+      },
+    },
+  });
+  // Sign it by Trader
+  await db.signature.create({
+    data: {
+      requestId: addAssetRequest.id,
+      signerUserId: trader.id,
+      signerRole: UserRole.TRADER,
+      signature: "0xMockSignatureByTraderAddAsset",
+      signedAt: new Date(),
+    }
+  });
+  console.log("Created Add Asset Request");
+
+  // 8c. Create Close Vault Request (Fully Signed / Executed for History)
+  const closeVaultRequest = await db.signatureRequest.create({
+    data: {
+      type: SignatureRequestType.CLOSE_VAULT,
+      createdByUserId: admin.id,
+      vaultId: vault.id,
+      requiredSignatures: 2,
+      status: "APPROVED",
+      payload: {
+        reason: "End of season",
+        distributionPlan: "Pro-rata"
+      },
+    },
+  });
+  // Sign by Admin
+  await db.signature.create({
+    data: {
+      requestId: closeVaultRequest.id,
+      signerUserId: admin.id,
+      signerRole: UserRole.ADMIN,
+      signature: "0xMockSignatureByAdminClose",
+      signedAt: new Date(),
+    }
+  });
+  // Sign by Investor
+  await db.signature.create({
+    data: {
+      requestId: closeVaultRequest.id,
+      signerUserId: investor.id,
+      signerRole: UserRole.INVESTOR,
+      signature: "0xMockSignatureByInvestorClose",
+      signedAt: new Date(),
+    }
+  });
+  console.log("Created Close Vault Request (Approved)");
+
+  // --- MOCK INVESTOR SPECIFIC DATA ---
+  const mockVault = await db.vault.create({
+    data: {
+      name: "Robusta Coffee Harvest 2024",
+      description: "High-yield Robusta coffee from Lampung.",
+      traderUserId: trader.id,
+      adminUserId: admin.id,
+      investorSignerUserId: mockInvestor.id, // Linked to Mock Investor
+      status: VaultStatus.OPEN,
+      collateralValue: 500000000n,
+      fundTargetBps: 6000,
+      profitShareBps: 4000,
+      traderCcrBps: 1000,
+      totalInvested: 100000000n,
+      totalSpent: 50000000n,
+      contractAddress: "0xMockContractAddress2",
+    },
+  });
+
+  // Mock Request 1: Fund Release
+  const mockReq1 = await db.signatureRequest.create({
+    data: {
+      type: SignatureRequestType.FUND_RELEASE,
+      createdByUserId: trader.id,
+      vaultId: mockVault.id,
+      requiredSignatures: 2,
+      fundRelease: {
+        create: {
+          vendorAddress: "0xVendorAddressMock",
+          amount: 25000000n,
+          description: "Logistics Payment",
+        },
+      },
+    },
+  });
+  // Sign by Trader
+  await db.signature.create({
+    data: {
+      requestId: mockReq1.id,
+      signerUserId: trader.id,
+      signerRole: UserRole.TRADER,
+      signature: "0xMockSig",
+      signedAt: new Date(),
+    }
+  });
+
+  // Mock Request 2: Add Asset
+  const mockReq2 = await db.signatureRequest.create({
+    data: {
+      type: SignatureRequestType.ADD_ASSET,
+      createdByUserId: trader.id,
+      vaultId: mockVault.id,
+      requiredSignatures: 2,
+      payload: {
+        asset: "Spices",
+        reason: "Diversification",
+        description: "Adding Cloves and Nutmeg."
+      },
+    },
+  });
+  // Sign by Trader
+  await db.signature.create({
+    data: {
+      requestId: mockReq2.id,
+      signerUserId: trader.id,
+      signerRole: UserRole.TRADER,
+      signature: "0xMockSig2",
+      signedAt: new Date(),
+    }
+  });
+  console.log("Created Mock Investor Data");
 
   console.log("✅ Seed completed!");
 }

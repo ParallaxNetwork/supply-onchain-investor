@@ -96,9 +96,10 @@ export function DebugMenu() {
       )}
 
       <Button
+        variant={isOpen ? "primary" : "outline"}
         className={cn(
           "h-12 w-12 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95",
-          isOpen ? "bg-slate-900 text-white" : "bg-white text-slate-900 border border-slate-200"
+          isOpen ? "bg-slate-900 text-white" : "border-slate-200"
         )}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle Debug Menu"

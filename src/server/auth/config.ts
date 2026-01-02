@@ -1,9 +1,11 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import { type UserRole } from "../../../generated/prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { db } from "@/server/db";
+import { authConfig as baseConfig } from "./auth.config";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -15,15 +17,13 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      role: UserRole;
     } & DefaultSession["user"];
   }
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+  interface User {
+    role: UserRole;
+  }
 }
 
 /**
@@ -32,6 +32,7 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  ...baseConfig,
   providers: [
     DiscordProvider,
     CredentialsProvider({
@@ -71,23 +72,9 @@ export const authConfig = {
       },
     }),
   ],
-  adapter: PrismaAdapter(db),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(db) as any,
   session: {
     strategy: "jwt",
-  },
-  callbacks: {
-    jwt: ({ token, user }) => {
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
-    },
-    session: ({ session, token }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: token.sub!,
-      },
-    }),
   },
 } satisfies NextAuthConfig;
