@@ -1,4 +1,3 @@
-import { postRouter } from "@/server/api/routers/post";
 import { vaultRouter } from "@/server/api/routers/vault";
 import { approvalRouter } from "@/server/api/routers/approval";
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";

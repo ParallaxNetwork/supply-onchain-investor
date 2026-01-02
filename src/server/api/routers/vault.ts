@@ -44,13 +44,13 @@ export const vaultRouter = createTRPCRouter({
         title: vault.name,
         theme: "accent", // Default theme
         author: {
-          name: vault.trader.name || "Unknown Trader",
-          avatar: vault.trader.image || `https://ui-avatars.com/api/?name=${vault.trader.name}`,
+          name: vault.trader.name ?? "Unknown Trader",
+          avatar: vault.trader.image ?? `https://ui-avatars.com/api/?name=${vault.trader.name}`,
         },
         status: vault.status === "OPEN" ? "OPEN" : "CLOSED",
         collateralValue: formatCurrency(vault.collateralValue),
         certificate: {
-          issuer: certificate?.issuerName || "Unknown Issuer",
+          issuer: certificate?.issuerName ?? "Unknown Issuer",
           verified: true, // Assuming seeded certs are verified
         },
         validity: vault.expiresAt ? formatDate(vault.expiresAt) : "N/A",
@@ -115,38 +115,44 @@ export const vaultRouter = createTRPCRouter({
         .filter((c) => c.commodityLot)
         .map((c) => ({
           commodity: c.commodityLot!.commodityType,
-          grade: c.commodityLot!.coffeeGrade || "N/A",
+          grade: c.commodityLot!.coffeeGrade ?? "N/A",
           quantity: `${(Number(c.commodityLot!.weightGrams) / 1000).toLocaleString()} kg`,
-          location: c.commodityLot!.coffeeOrigin || "Unknown",
+          location: c.commodityLot!.coffeeOrigin ?? "Unknown",
           valuation: formatCurrency(c.collateralValue),
         }));
 
       // Collect trace events from the first commodity lot (assuming primary collateral)
       // In a real app, you might merge events from all lots or show them separately
       const primaryLot = vault.collateral.find((c) => c.commodityLot)?.commodityLot;
-      const traceEvents = primaryLot?.traceEvents.map((event) => ({
-        title: event.metadata && typeof event.metadata === 'object' && 'description' in event.metadata
-          ? String(event.metadata.description)
-          : event.type,
-        date: formatDate(event.occurredAt),
-        description: event.location || "",
-        tag: event.metadata && typeof event.metadata === 'object' && 'tag' in event.metadata
-          ? String(event.metadata.tag)
-          : undefined,
-        active: event.metadata && typeof event.metadata === 'object' && 'active' in event.metadata
-          ? Boolean(event.metadata.active)
-          : false,
-      })) || [];
+      const traceEvents = primaryLot?.traceEvents.map((event) => {
+        const metadata = event.metadata as Record<string, unknown> | null;
+        return {
+          title: typeof metadata?.description === "string"
+            ? metadata.description
+            : event.type,
+          date: formatDate(event.occurredAt),
+          description: event.location ?? "",
+          tag: typeof metadata?.tag === "string"
+            ? metadata.tag
+            : undefined,
+          active: typeof metadata?.active === "boolean"
+            ? metadata.active
+            : false,
+        };
+      }) ?? [];
 
       // Documents
-      const docs = vault.documents.map((vd) => ({
-        title: vd.document.metadata && typeof vd.document.metadata === 'object' && 'title' in vd.document.metadata
-          ? String(vd.document.metadata.title)
-          : vd.document.kind.replace("_", " "),
-        date: formatDate(vd.document.uploadedAt),
-        type: "PDF", // Assuming all are PDFs for now
-        url: vd.document.url,
-      }));
+      const docs = vault.documents.map((vd) => {
+        const metadata = vd.document.metadata as Record<string, unknown> | null;
+        return {
+          title: typeof metadata?.title === "string"
+            ? metadata.title
+            : vd.document.kind.replace("_", " "),
+          date: formatDate(vd.document.uploadedAt),
+          type: "PDF", // Assuming all are PDFs for now
+          url: vd.document.url,
+        };
+      });
 
       // My Investment
       const myInvestment = vault.investments[0];
@@ -159,7 +165,7 @@ export const vaultRouter = createTRPCRouter({
       return {
         id: vault.id,
         title: vault.name,
-        description: vault.description || "",
+        description: vault.description ?? "",
         tags: ["Open for Investment", "High Grade", "Verified Warehouse"], // Hardcoded or derived
         stats: {
           profitShare: `${(vault.profitShareBps / 100).toFixed(0)}%`,
@@ -175,10 +181,10 @@ export const vaultRouter = createTRPCRouter({
           balance: "IDR 50.000.000", // Mock balance for user
         },
         manager: {
-          name: vault.trader.name || "Unknown Trader",
+          name: vault.trader.name ?? "Unknown Trader",
           role: "Supply Chain Manager",
-          image: vault.trader.image || `https://ui-avatars.com/api/?name=${vault.trader.name}`,
-          ccrRatio: `${((vault.traderCcrBps || 0) / 100).toFixed(0)}%`,
+          image: vault.trader.image ?? `https://ui-avatars.com/api/?name=${vault.trader.name}`,
+          ccrRatio: `${((vault.traderCcrBps ?? 0) / 100).toFixed(0)}%`,
           vaultsManaged: vault.trader.traderVaults.length,
         },
         assets: tradeableAssets,

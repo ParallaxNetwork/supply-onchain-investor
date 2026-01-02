@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -295,9 +296,14 @@ export default async function InvestmentDetailPage({
               Vault Manager
             </h4>
             <div className="flex items-center gap-3 mb-4">
-              <div className="size-12 rounded-full bg-neutral-100 flex items-center justify-center text-primary font-bold text-lg overflow-hidden">
+              <div className="size-12 rounded-full bg-neutral-100 flex items-center justify-center text-primary font-bold text-lg overflow-hidden relative">
                 {investmentData.manager.image ? (
-                  <img src={investmentData.manager.image} alt={investmentData.manager.name} />
+                  <Image
+                    src={investmentData.manager.image}
+                    alt={investmentData.manager.name}
+                    fill
+                    className="object-cover"
+                  />
                 ) : "NC"}
               </div>
               <div>

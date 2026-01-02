@@ -291,7 +291,7 @@ export async function getInvestments() {
   return INVESTMENTS;
 }
 
-export async function getInvestmentDetail(id: string) {
+export async function getInvestmentDetail(_id: string) {
   // Mock async fetch
   return MOCK_INVESTMENT_DETAIL;
 }

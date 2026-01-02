@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/card";
 import { api } from "@/trpc/react";
 import type { RouterOutputs } from "@/trpc/react";
+import type { SignatureRequestType } from "../../../../generated/prisma/client";
 
 type ApprovalRequest = RouterOutputs["approval"]["getInbox"][number];
-type InitiatedRequest = RouterOutputs["approval"]["getInitiated"][number];
 
 export default function ApprovalPage() {
     const [showModal, setShowModal] = React.useState(false);
@@ -43,9 +43,9 @@ export default function ApprovalPage() {
     };
 
     const { data: inboxRequests, isLoading: isLoadingInbox } = api.approval.getInbox.useQuery({
-        type: getApiType(selectedRequestType) as any,
+        type: getApiType(selectedRequestType) as SignatureRequestType | undefined,
         vaultId: selectedVault,
-        status: selectedStatus.toUpperCase() as any,
+        status: selectedStatus.toUpperCase() as "PENDING" | "SIGNED" | "REJECTED",
     });
     const { data: initiatedRequests, isLoading: isLoadingInitiated } = api.approval.getInitiated.useQuery();
 

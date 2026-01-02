@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { SignatureRequestStatus, SignatureRequestType } from "../../../../generated/prisma/client";
+import { SignatureRequestStatus, SignatureRequestType, type Prisma } from "../../../../generated/prisma/client";
 
 export const approvalRouter = createTRPCRouter({
   getInbox: protectedProcedure
@@ -13,9 +13,9 @@ export const approvalRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { type, vaultId, status } = input || {};
+      const { type, vaultId, status } = input ?? {};
 
-      const where: any = {
+      const where: Prisma.SignatureRequestWhereInput = {
         vault: {
           OR: [
             { traderUserId: userId },
