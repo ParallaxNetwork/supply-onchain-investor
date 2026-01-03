@@ -1,5 +1,6 @@
 import { vaultRouter } from "@/server/api/routers/vault";
 import { approvalRouter } from "@/server/api/routers/approval";
+import { authRouter } from "@/server/api/routers/auth";
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
 
 /**
@@ -10,6 +11,7 @@ import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
 export const appRouter = createTRPCRouter({
   vault: vaultRouter,
   approval: approvalRouter,
+  auth: authRouter,
 });
 
 // export type definition of API

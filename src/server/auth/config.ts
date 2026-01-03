@@ -36,37 +36,100 @@ export const authConfig = {
   providers: [
     DiscordProvider,
     CredentialsProvider({
-      name: "Mock Login",
+      name: "OTP Login",
       credentials: {
+        email: { label: "Email", type: "email" },
+        otp: { label: "OTP", type: "text" },
+        sessionId: { label: "Session ID", type: "text" },
         role: { label: "Role", type: "text" },
       },
       async authorize(credentials) {
-        if (process.env.NODE_ENV === "production") {
-          // console.log("[Mock Login] Blocked in production");
+        if (!credentials?.email || !credentials?.otp || !credentials?.sessionId) {
+          console.log("[OTP Login] Missing credentials");
           return null;
         }
 
-        console.log("[Mock Login] Authorizing with credentials:", credentials);
-
-        const role = (credentials?.role as string) || "INVESTOR";
-        const email = `mock-${role.toLowerCase()}@example.com`;
+        const email = credentials.email as string;
+        const otp = credentials.otp as string;
+        const sessionId = credentials.sessionId as string;
+        const role = (credentials.role as string) || "INVESTOR";
 
         try {
-          // Upsert the mock user in the database
-          const user = await db.user.upsert({
+          // 1. Find OTP Session
+          const session = await db.otpSession.findUnique({
+            where: { sessionId },
+          });
+
+          if (!session) {
+            console.log("[OTP Login] Session not found");
+            return null;
+          }
+
+          // 2. Validate Session
+          if (session.email !== email) {
+            console.log("[OTP Login] Email mismatch");
+            return null;
+          }
+
+          if (session.isUsed) {
+            console.log("[OTP Login] Token already used");
+            return null;
+          }
+
+          if (session.expiresAt < new Date()) {
+            console.log("[OTP Login] Token expired");
+            return null;
+          }
+
+          if (session.attempts >= 3) {
+            console.log("[OTP Login] Too many attempts");
+            return null;
+          }
+
+          // 3. Verify OTP
+          if (session.otp !== otp) {
+            console.log("[OTP Login] Invalid OTP");
+            await db.otpSession.update({
+              where: { sessionId },
+              data: { attempts: { increment: 1 } },
+            });
+            return null;
+          }
+
+          // 4. Mark session as used
+          await db.otpSession.update({
+            where: { sessionId },
+            data: { isUsed: true },
+          });
+
+          // 5. Get or Create User
+          const existingUser = await db.user.findUnique({
             where: { email },
-            update: {},
-            create: {
+          });
+
+          if (existingUser) {
+             if (existingUser.role !== role && existingUser.role !== "ADMIN") {
+               console.log(`[OTP Login] Role mismatch. User is ${existingUser.role}, attempted login as ${role}`);
+               return null;
+             }
+             return existingUser;
+          }
+
+          // Create new user
+          const newUser = await db.user.create({
+            data: {
               email,
-              name: `Mock ${role}`,
-              role: role === "ADMIN" ? "ADMIN" : "INVESTOR",
-              image: `https://ui-avatars.com/api/?name=Mock+${role}&background=random`,
+              name: `User ${role}`,
+              role: role === "ADMIN" ? "ADMIN" : (role as UserRole),
+              image: `https://ui-avatars.com/api/?name=${role}&background=random`,
+              emailVerified: new Date(),
             },
           });
-          console.log("[Mock Login] User upserted:", user);
-          return user;
+          
+          return newUser;
+
         } catch (error) {
-          console.error("[Mock Login] Database error:", error);
+          console.error("[OTP Login] Error:", error);
           return null;
         }
       },

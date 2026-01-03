@@ -1,0 +1,14 @@
+
+model OtpSession {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  sessionId String   @unique
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email, sessionId])
+}
