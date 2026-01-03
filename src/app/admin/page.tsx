@@ -1,71 +1,55 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
-import { Button } from "@/components/ui/button";
 
 type Activity = {
   id: string;
-  type: "vault" | "user" | "approval" | "transaction";
   title: string;
-  description: string;
-  timestamp: string;
-  status?: "pending" | "completed" | "rejected";
+  date: string;
+  status: "success" | "new" | "pending";
   icon: string;
+  iconBg: "accent" | "primary" | "warning";
 };
 
 const MOCK_ACTIVITIES: Activity[] = [
   {
     id: "1",
-    type: "vault",
-    title: "New Vault Created",
-    description: "Gayo Coffee Harvest 2024 by Trader Budi Santoso",
-    timestamp: "2 hours ago",
-    status: "completed",
-    icon: "account_balance",
+    title: "New User Registered",
+    date: "Jan 18 • User ID: #001241",
+    status: "success",
+    icon: "person_add",
+    iconBg: "accent",
   },
   {
     id: "2",
-    type: "approval",
-    title: "Fund Release Request",
-    description: "IDRP 50M for Vault Alpha - Waiting for Admin Signature",
-    timestamp: "5 hours ago",
-    status: "pending",
-    icon: "payments",
+    title: "Vault Created",
+    date: "Jan 17 • Vault ID: #VAULT0013",
+    status: "new",
+    icon: "account_balance",
+    iconBg: "primary",
   },
   {
     id: "3",
-    type: "user",
-    title: "New Investor Registered",
-    description: "Bob Investor completed KYC verification",
-    timestamp: "1 day ago",
-    status: "completed",
-    icon: "person_add",
+    title: "Multisig Initiated",
+    date: "Jan 16 • Approval ID: #APP0056",
+    status: "pending",
+    icon: "approval",
+    iconBg: "warning",
   },
   {
     id: "4",
-    type: "vault",
-    title: "Vault Status Updated",
-    description: "Robusta Coffee Harvest moved to ACTIVE status",
-    timestamp: "2 days ago",
-    status: "completed",
-    icon: "update",
+    title: "New User Registered",
+    date: "Jan 15 • User ID: #001240",
+    status: "success",
+    icon: "person_add",
+    iconBg: "accent",
   },
   {
     id: "5",
-    type: "approval",
-    title: "Add Asset Request",
-    description: "Trader requesting to add Cocoa Beans to Vault Beta",
-    timestamp: "3 days ago",
-    status: "pending",
-    icon: "add_circle",
-  },
-  {
-    id: "6",
-    type: "transaction",
-    title: "Large Investment",
-    description: "IDRP 120M investment in Gayo Coffee Harvest 2024",
-    timestamp: "4 days ago",
-    status: "completed",
-    icon: "trending_up",
+    title: "Vault Created",
+    date: "Jan 14 • Vault ID: #VAULT0012",
+    status: "new",
+    icon: "account_balance",
+    iconBg: "primary",
   },
 ];
 
@@ -74,7 +58,8 @@ function StatsCard({
   value,
   subtitle,
   icon,
-  trend,
+  badge,
+  label,
   buttonLabel,
   buttonHref,
 }: {
@@ -82,7 +67,8 @@ function StatsCard({
   value: string;
   subtitle?: string;
   icon: string;
-  trend?: { value: string; isPositive: boolean };
+  badge?: string;
+  label: string;
   buttonLabel?: string;
   buttonHref?: string;
 }) {
@@ -91,61 +77,40 @@ function StatsCard({
       <div className="absolute right-0 top-0 w-80 h-80 bg-accent opacity-10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       <div className="flex items-center justify-between w-full relative z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/10">
-            <Icon name={icon} className="text-[24px] text-white" />
+          <div className="p-2 bg-white/10 rounded-lg">
+            <Icon name={icon} className="text-white text-[24px]" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">{title}</h2>
+            <h2 className="text-lg font-bold">{title}</h2>
             {subtitle && (
-              <p className="text-xs font-medium text-white/60">{subtitle}</p>
+              <p className="text-xs text-white/60 font-medium">{subtitle}</p>
             )}
           </div>
         </div>
-      </div>
-      <div className="flex flex-col items-start relative z-10 w-full">
-        <p className="text-sm font-medium mb-1 opacity-80">Number of Vaults</p>
-        <div className="flex items-baseline flex-wrap">
-          <span className="text-4xl font-extrabold tracking-tight text-white">
-            {value}
+        {badge && (
+          <span className="bg-white/10 text-white text-xs font-bold px-2 py-1 rounded">
+            {badge}
           </span>
-        </div>
-        {trend && (
-          <p className="text-xs mt-2 font-medium flex items-center gap-1 text-white/80">
-            <span
-              className={`font-bold flex items-center ${
-                trend.isPositive ? "text-success" : "text-danger"
-              }`}
-            >
-              <Icon
-                name={trend.isPositive ? "arrow_upward" : "arrow_downward"}
-                className="text-[14px]"
-              />{" "}
-              {trend.value}
-            </span>
-            vs last month
-          </p>
         )}
       </div>
+      <div className="flex flex-col items-start relative z-10 w-full">
+        <p className="text-sm opacity-80 font-medium mb-1">{label}</p>
+        <span className="text-4xl font-extrabold tracking-tight">{value}</span>
+      </div>
       {buttonLabel && (
-        <div className="w-full pt-6 border-t border-white/10 relative z-10">
+        <div className="w-full pt-6 border-t border-white/10 relative z-10 flex flex-wrap gap-4">
           {buttonHref ? (
             <Link href={buttonHref}>
-              <Button
-                variant="outline-white"
-                size="lg"
-                className="w-full rounded-xl"
-              >
-                {buttonLabel}
-              </Button>
+              <button className="bg-primary border border-white/20 text-white hover:bg-white/5 transition-colors text-base font-bold px-8 py-3 rounded-xl flex items-center justify-center gap-2 flex-1 sm:flex-none">
+                <span>{buttonLabel}</span>
+                <Icon name="arrow_forward" className="text-[20px]" />
+              </button>
             </Link>
           ) : (
-            <Button
-              variant="outline-white"
-              size="lg"
-              className="w-full rounded-xl"
-            >
-              {buttonLabel}
-            </Button>
+            <button className="bg-primary border border-white/20 text-white hover:bg-white/5 transition-colors text-base font-bold px-8 py-3 rounded-xl flex items-center justify-center gap-2 flex-1 sm:flex-none">
+              <span>{buttonLabel}</span>
+              <Icon name="arrow_forward" className="text-[20px]" />
+            </button>
           )}
         </div>
       )}
@@ -154,31 +119,29 @@ function StatsCard({
 }
 
 function ActivityList({ activities }: { activities: Activity[] }) {
-  const getStatusColor = (status?: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
+      case "success":
+        return "text-accent";
+      case "new":
+        return "text-primary";
       case "pending":
-        return "bg-warning/10 text-warning";
-      case "completed":
-        return "bg-success/10 text-success";
-      case "rejected":
-        return "bg-danger/10 text-danger";
+        return "text-warning";
       default:
-        return "bg-neutral-100 text-neutral-600";
+        return "text-neutral-600";
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "vault":
-        return "account_balance";
-      case "user":
-        return "group";
-      case "approval":
-        return "fact_check";
-      case "transaction":
-        return "payments";
+  const getIconBg = (bg: string) => {
+    switch (bg) {
+      case "accent":
+        return "bg-accent/10 text-accent";
+      case "primary":
+        return "bg-primary/5 text-primary";
+      case "warning":
+        return "bg-warning/10 text-warning";
       default:
-        return "info";
+        return "bg-neutral-100 text-neutral-600";
     }
   };
 
@@ -187,11 +150,19 @@ function ActivityList({ activities }: { activities: Activity[] }) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
           <Icon name="history" className="text-primary text-[20px]" />
-          Recent Activity
+          Recent System Activity
         </h2>
-        <Button variant="ghost" size="sm">
-          View All
-        </Button>
+      </div>
+      <div className="relative">
+        <Icon
+          name="search"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-[18px]"
+        />
+        <input
+          className="block w-full rounded-lg border-neutral-200 bg-neutral-50 py-2 pl-9 pr-4 text-xs font-medium text-neutral-900 focus:border-primary focus:ring-primary placeholder:text-neutral-400"
+          placeholder="Filter activity..."
+          type="text"
+        />
       </div>
       <div className="flex flex-col gap-3 overflow-y-auto pr-1 max-h-[500px]">
         {activities.map((activity) => (
@@ -199,35 +170,35 @@ function ActivityList({ activities }: { activities: Activity[] }) {
             key={activity.id}
             className="flex items-center justify-between p-3 rounded-lg bg-neutral-50 border border-neutral-100 hover:bg-neutral-100 transition-colors"
           >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="size-8 rounded-full bg-primary/5 text-primary flex items-center justify-center shrink-0">
-                <Icon name={getTypeIcon(activity.type)} className="text-[16px]" />
+            <div className="flex items-center gap-3">
+              <div
+                className={`size-8 rounded-full flex items-center justify-center shrink-0 ${getIconBg(
+                  activity.iconBg,
+                )}`}
+              >
+                <Icon name={activity.icon} className="text-[16px]" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0">
                 <p className="text-sm font-bold text-neutral-900 truncate">
                   {activity.title}
                 </p>
-                <p className="text-xs text-neutral-600 truncate">
-                  {activity.description}
-                </p>
-                <p className="text-[10px] text-neutral-500 mt-1">
-                  {activity.timestamp}
-                </p>
+                <p className="text-[10px] text-neutral-600">{activity.date}</p>
               </div>
             </div>
-            {activity.status && (
-              <span
-                className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset ${getStatusColor(
-                  activity.status,
-                )} shrink-0 ml-2`}
-              >
-                {activity.status.charAt(0).toUpperCase() +
-                  activity.status.slice(1)}
-              </span>
-            )}
+            <span
+              className={`text-xs font-bold whitespace-nowrap ${getStatusColor(
+                activity.status,
+              )}`}
+            >
+              {activity.status.charAt(0).toUpperCase() +
+                activity.status.slice(1)}
+            </span>
           </div>
         ))}
       </div>
+      <button className="mt-auto text-xs font-bold text-primary hover:text-primary/80 transition-colors w-full text-center py-2 border border-dashed border-neutral-300 rounded-lg">
+        View All Activity
+      </button>
     </div>
   );
 }
@@ -236,7 +207,9 @@ export default function AdminOverviewPage() {
   return (
     <main className="flex-1 w-full px-4 md:px-8 py-8 flex flex-col gap-8 overflow-hidden">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900">Overview</h1>
+        <h1 className="text-2xl font-bold text-neutral-900">
+          Overview
+        </h1>
         <div className="lg:hidden flex items-center gap-2">
           <button className="flex items-center gap-2 text-sm font-bold text-neutral-600 hover:text-primary">
             <Icon name="menu" />
@@ -250,10 +223,11 @@ export default function AdminOverviewPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           <StatsCard
             title="Total Active Vaults"
-            value="24"
+            value="12"
             subtitle="Currently operational vaults"
             icon="account_balance"
-            trend={{ value: "+3", isPositive: true }}
+            badge="Active"
+            label="Number of Vaults"
             buttonLabel="Manage Vaults"
             buttonHref="/admin/vaults"
           />
@@ -261,8 +235,9 @@ export default function AdminOverviewPage() {
             title="Total Registered Users"
             value="1,240"
             subtitle="Platform users"
-            icon="trending_up"
-            trend={{ value: "+12%", isPositive: true }}
+            icon="group"
+            badge="Investors"
+            label="Total Users"
             buttonLabel="View Users"
             buttonHref="/admin/users"
           />
