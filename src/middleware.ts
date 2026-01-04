@@ -11,7 +11,10 @@ export default auth((req) => {
     const userRole = req.auth?.user?.role;
 
     const isInvestorRoute = nextUrl.pathname.startsWith("/investor");
+    const isAdminRoute = nextUrl.pathname.startsWith("/admin");
+    const isAdminLoginRoute = nextUrl.pathname === "/admin/login";
 
+    // Protect investor routes
     if (isInvestorRoute) {
         if (!isLoggedIn) {
             return NextResponse.redirect(new URL("/login", nextUrl));
@@ -21,9 +24,29 @@ export default auth((req) => {
             return NextResponse.redirect(new URL("/", nextUrl));
         }
     }
-    return NextResponse.next();
+
+    // Protect admin routes (except login page)
+    if (isAdminRoute && !isAdminLoginRoute) {
+        if (!isLoggedIn) {
+            return NextResponse.redirect(new URL("/admin/login", nextUrl));
+        }
+        if (userRole !== "ADMIN") {
+            // Redirect to home if logged in but not an admin
+            return NextResponse.redirect(new URL("/", nextUrl));
+        }
+    }
+
+    // Redirect admin away from login page if already logged in
+    if (isAdminLoginRoute && isLoggedIn && userRole === "ADMIN") {
+        return NextResponse.redirect(new URL("/admin", nextUrl));
+    }
+
+    // Add pathname to headers for layout to check
+    const response = NextResponse.next();
+    response.headers.set("x-pathname", nextUrl.pathname);
+    return response;
 });
 
 export const config = {
-    matcher: ["/investor/:path*"],
+    matcher: ["/investor/:path*", "/admin/:path*"],
 };

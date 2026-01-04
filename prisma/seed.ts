@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole, VaultStatus, CommodityType, SignatureRequestType, SignatureRequestStatus, DocumentKind, CertificateType, TraceEventType, WalletCurrency, WalletTransactionType, WalletTransactionStatus, KycStatus, MarketplaceListingStatus, MarketplaceInvestmentStatus } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import * as bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -12,18 +13,24 @@ const db = new PrismaClient({
 async function main() {
   console.log("🌱 Starting seed...");
 
-  // 1. Create Users
-  const adminEmail = "admin@example.com";
+  // 1. Create Admin User with Password
+  const adminEmail = "admin@aplx.com";
+  const adminPassword =
+    process.env.ADMIN_DEFAULT_PASSWORD ?? "Admin1234"; // Use env var if available
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  
   const admin = await db.user.upsert({
     where: { email: adminEmail },
     update: {
       name: "Admin User",
       role: UserRole.ADMIN,
+      password: hashedPassword, // Update password on seed
     },
     create: {
       email: adminEmail,
       name: "Admin User",
       role: UserRole.ADMIN,
+      password: hashedPassword, // Hashed password for admin login
       image: "https://ui-avatars.com/api/?name=Admin+User&background=random",
       profile: {
         create: {
@@ -40,6 +47,11 @@ async function main() {
     },
   });
   console.log("Created Admin:", admin.name);
+  if (process.env.NODE_ENV === "development") {
+    console.log("Admin credentials:", { email: adminEmail, password: adminPassword });
+  } else {
+    console.log("Admin user created with email:", adminEmail);
+  }
 
   const traderEmail = "trader@example.com";
   const trader = await db.user.upsert({
